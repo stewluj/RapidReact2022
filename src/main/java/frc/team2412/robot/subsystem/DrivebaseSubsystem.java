@@ -5,9 +5,7 @@ import static frc.team2412.robot.Hardware.*;
 import com.google.errorprone.annotations.concurrent.GuardedBy;
 import com.swervedrivespecialties.swervelib.SwerveModule;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.SerialPort;
@@ -37,7 +35,6 @@ import org.frcteam2910.common.util.*;
 import java.util.Map;
 import java.util.Optional;
 
-import static frc.team2412.robot.Hardware.*;
 import static frc.team2412.robot.subsystem.DrivebaseSubsystem.DriveConstants.*;
 
 public class DrivebaseSubsystem extends SubsystemBase implements UpdateManager.Updatable {
@@ -85,13 +82,6 @@ public class DrivebaseSubsystem extends SubsystemBase implements UpdateManager.U
             new Vector2(TRACKWIDTH / 2.0, -WHEELBASE / 2.0), // front right
             new Vector2(-TRACKWIDTH / 2.0, WHEELBASE / 2.0), // back left
             new Vector2(-TRACKWIDTH / 2.0, -WHEELBASE / 2.0) // back right
-    );
-
-    private final SwerveDriveKinematics wpi_driveKinematics = new SwerveDriveKinematics(
-            new Translation2d(-TRACKWIDTH / 2.0, WHEELBASE / 2.0), // front left
-            new Translation2d(TRACKWIDTH / 2.0, WHEELBASE / 2.0), // front right
-            new Translation2d(-TRACKWIDTH / 2.0, -WHEELBASE / 2.0), // back left
-            new Translation2d(TRACKWIDTH / 2.0, -WHEELBASE / 2.0) // back right
     );
 
     private final SwerveModule[] modules;
@@ -407,16 +397,13 @@ public class DrivebaseSubsystem extends SubsystemBase implements UpdateManager.U
 
     @Override
     public void periodic() {
-        // Pose2d pose = getPoseAsPoseMeters();
         synchronized (kinematicsLock) {
             odometryXEntry.setDouble(pose.translation.x);
             odometryYEntry.setDouble(pose.translation.y);
             odometryAngleEntry.setDouble(pose.rotation.toDegrees());
         }
-        // System.out.println(pose);
         Pose2d pose = getPoseAsPoseMeters();
         field.setRobotPose(pose);
-
     }
 
     public HolonomicMotionProfiledTrajectoryFollower getFollower() {
@@ -432,6 +419,7 @@ public class DrivebaseSubsystem extends SubsystemBase implements UpdateManager.U
     }
 
     public boolean getAntiTip() {
-        return antiTip.getBoolean(false);
+        Robot robot = Robot.getInstance();
+        return robot.isCompetition() && robot.isTeleop() && antiTip.getBoolean(false);
     }
 }

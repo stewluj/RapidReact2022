@@ -41,7 +41,6 @@ public class AutonomousCommand extends SequentialCommandGroup {
     }
 
     public AutonomousCommand(DrivebaseSubsystem drivebaseSubsystem) {
-        // Create config for trajectory
         TrajectoryConfig config = new TrajectoryConfig(
                 AutonomousCommand.AutoConstants.MAX_SPEED_METERS_PER_SECOND,
                 AutonomousCommand.AutoConstants.MAX_ACCELERATION_METERS_PER_SECOND_SQUARED)
@@ -56,11 +55,11 @@ public class AutonomousCommand extends SequentialCommandGroup {
                 0.000000005, 0, 0, AutoConstants.K_THETA_CONTROLLER_CONSTRAINTS);
         thetaController.enableContinuousInput(-Math.PI, Math.PI);
         exampleTrajectory.relativeTo(drivebaseSubsystem.getPoseAsPoseMeters());
+
         SwerveControllerCommand swerveControllerCommand = new SwerveControllerCommand(
                 exampleTrajectory,
                 drivebaseSubsystem::getPoseAsPoseMeters, // Functional interface to feed supplier
                 AutoConstants.driveKinematics,
-
                 // Position controllers
                 new PIDController(AutoConstants.PX_CONTROLLER, 0, 0),
                 new PIDController(AutoConstants.PY_CONTROLLER, 0, 0),
@@ -69,25 +68,4 @@ public class AutonomousCommand extends SequentialCommandGroup {
                 drivebaseSubsystem);
         addCommands(swerveControllerCommand);
     }
-
-    // public Command getAutonomousCommand(Trajectory exampleTrajectory) {
-
-    // ProfiledPIDController thetaController = new ProfiledPIDController(
-    // 0.000000005, 0, 0, AutoConstants.K_THETA_CONTROLLER_CONSTRAINTS);
-    // thetaController.enableContinuousInput(-Math.PI, Math.PI);
-    // exampleTrajectory.relativeTo(drivebaseSubsystem.getPoseAsPoseMeters());
-    // SwerveControllerCommand swerveControllerCommand = new SwerveControllerCommand(
-    // exampleTrajectory,
-    // drivebaseSubsystem::getPoseAsPoseMeters, // Functional interface to feed supplier
-    // AutoConstants.driveKinematics,
-
-    // // Position controllers
-    // new PIDController(AutoConstants.PX_CONTROLLER, 0, 0),
-    // new PIDController(AutoConstants.PY_CONTROLLER, 0, 0),
-    // thetaController,
-    // drivebaseSubsystem::updateModules,
-    // drivebaseSubsystem);
-
-    // return swerveControllerCommand;
-    // }
 }

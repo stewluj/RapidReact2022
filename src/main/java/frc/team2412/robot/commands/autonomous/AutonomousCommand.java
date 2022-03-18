@@ -1,12 +1,17 @@
 package frc.team2412.robot.commands.autonomous;
 
+import java.util.List;
+
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.team2412.robot.subsystem.DrivebaseSubsystem;
 
@@ -35,14 +40,18 @@ public class AutonomousCommand extends SequentialCommandGroup {
                 new Translation2d(-WHEEL_BASE / 2, -TRACK_WIDTH / 2));
     }
 
-    DrivebaseSubsystem drivebaseSubsystem;
-
-    public AutonomousCommand(DrivebaseSubsystem d) {
-        drivebaseSubsystem = d;
-    }
-
-    public Command getAutonomousCommand(Trajectory exampleTrajectory) {
-
+    public AutonomousCommand(DrivebaseSubsystem drivebaseSubsystem) {
+        // Create config for trajectory
+        TrajectoryConfig config = new TrajectoryConfig(
+                AutonomousCommand.AutoConstants.MAX_SPEED_METERS_PER_SECOND,
+                AutonomousCommand.AutoConstants.MAX_ACCELERATION_METERS_PER_SECOND_SQUARED)
+                        // Add kinematics to ensure max speed is actually obeyed
+                        .setKinematics(AutonomousCommand.AutoConstants.driveKinematics);
+        Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
+                new Pose2d(new Translation2d(7.5, 1.9), Rotation2d.fromDegrees(0)),
+                List.of(new Translation2d(7.3, 1.1), new Translation2d(5.1, 1.8), new Translation2d(2.1, 1.3)),
+                new Pose2d(new Translation2d(5, 2.7), Rotation2d.fromDegrees(0)),
+                config);
         ProfiledPIDController thetaController = new ProfiledPIDController(
                 0.000000005, 0, 0, AutoConstants.K_THETA_CONTROLLER_CONSTRAINTS);
         thetaController.enableContinuousInput(-Math.PI, Math.PI);
@@ -58,7 +67,27 @@ public class AutonomousCommand extends SequentialCommandGroup {
                 thetaController,
                 drivebaseSubsystem::updateModules,
                 drivebaseSubsystem);
-
-        return swerveControllerCommand;
+        addCommands(swerveControllerCommand);
     }
+
+    // public Command getAutonomousCommand(Trajectory exampleTrajectory) {
+
+    // ProfiledPIDController thetaController = new ProfiledPIDController(
+    // 0.000000005, 0, 0, AutoConstants.K_THETA_CONTROLLER_CONSTRAINTS);
+    // thetaController.enableContinuousInput(-Math.PI, Math.PI);
+    // exampleTrajectory.relativeTo(drivebaseSubsystem.getPoseAsPoseMeters());
+    // SwerveControllerCommand swerveControllerCommand = new SwerveControllerCommand(
+    // exampleTrajectory,
+    // drivebaseSubsystem::getPoseAsPoseMeters, // Functional interface to feed supplier
+    // AutoConstants.driveKinematics,
+
+    // // Position controllers
+    // new PIDController(AutoConstants.PX_CONTROLLER, 0, 0),
+    // new PIDController(AutoConstants.PY_CONTROLLER, 0, 0),
+    // thetaController,
+    // drivebaseSubsystem::updateModules,
+    // drivebaseSubsystem);
+
+    // return swerveControllerCommand;
+    // }
 }
